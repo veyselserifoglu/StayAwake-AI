@@ -75,12 +75,23 @@ code .
    %cd StayAwake-AI
    ```
 
-3. To save your work back to GitHub:
+3. To save your work back to GitHub, you have two options:
+
+   **Option A: Using Git Commands**
    ```python
    !git add .
    !git commit -m "your commit message"
    !git push
    ```
+
+   **Option B: Using Colab's Save to GitHub Feature**
+   - Click on "File" > "Save a copy in GitHub"
+   - Select your repository: `StayAwake-AI`
+   - Choose the appropriate path:
+     - For new notebooks: `notebooks/your_notebook_name.ipynb`
+     - For modified notebooks: Keep the same path as the original file
+   - Add a commit message
+   - Click "OK"
 
 4. To use GPU acceleration (recommended for training):
    - Click on "Runtime" > "Change runtime type"
@@ -89,6 +100,7 @@ code .
 
 ### Using Jupyter Notebooks
 
+#### Local Development
 1. Start the Jupyter server:
 ```bash
 jupyter notebook
@@ -98,11 +110,43 @@ jupyter notebook
 
 3. Create new notebooks in the `notebooks` directory or open existing ones
 
+#### Google Colab
+1. Follow the setup instructions in the "Google Colab" section above
+2. Create new notebooks or open existing ones from the `notebooks` directory
+3. Save your work using either of the GitHub save methods described above
+
 ## Contributing
 
-1. Create a new branch for your feature
-2. Make your changes
-3. Submit a pull request
+1. Create a new branch for your feature:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+   - Branch naming convention: `feature/` for new features, `fix/` for bug fixes
+   - Each branch should focus on a single feature or fix
+   - Branches should not live longer than one week
+   - If work takes longer than a week, create a new branch and reference the previous work
+
+2. Make your changes and commit them:
+   ```bash
+   git add .
+   git commit -m "feat: description of your changes"
+   ```
+
+3. Push your branch and submit a pull request:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+   - Create a pull request from your branch to `main`
+   - Include a clear description of your changes
+   - Reference any related issues
+
+4. After your pull request is merged:
+   - Delete your feature branch
+   - Update your local `main` branch
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
 
 ## License
 
