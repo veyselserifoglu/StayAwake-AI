@@ -1,10 +1,10 @@
 {
     "name": "StayAwake-AI Development",
-    "image": "mcr.microsoft.com/devcontainers/python:3.10",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
     "features": {
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.10"
-        },
         "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {}
     },
@@ -22,10 +22,14 @@
                 "python.linting.enabled": true,
                 "python.linting.pylintEnabled": true,
                 "python.formatting.provider": "black",
-                "editor.formatOnSave": true
+                "editor.formatOnSave": true,
+                "jupyter.alwaysTrustNotebooks": true
             }
         }
     },
+    "forwardPorts": [8888],
     "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
-    "remoteUser": "vscode"
-} 
+    "remoteUser": "vscode",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/StayAwake-AI,type=bind,consistency=cached",
+    "workspaceFolder": "/workspaces/StayAwake-AI"
+}
