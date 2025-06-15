@@ -710,8 +710,8 @@ def plot_transfer_learning_history(json_files, save_path=None):
 if __name__ == "__main__":
     # List of JSON files
     json_files = [
-        "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0/model_results_B0.json",
-        "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalizatized_images/model_results_B0.json",
+        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0/model_results_B0.json",
+        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalizatized_images/model_results_B0.json",
         "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalized_images_16_batches/model_results_B0.json"
 
         # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B1/model_results_B1.json", 
