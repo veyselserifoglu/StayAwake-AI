@@ -36,9 +36,8 @@ def extract_learning_rates(log_file_path):
 
 # Test the function
 if __name__ == "__main__":
-    # Test with your files
     test_files = [
-        "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalized_images_16_batches/learning_rates.txt",
+        "./StayAwake-AI/models_inattention/B0_without_normalized_images_16_batches/learning_rates.txt",
     ]
     
     for file_path in test_files:

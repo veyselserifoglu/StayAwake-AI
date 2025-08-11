@@ -2,6 +2,8 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+import matplotlib.image as mpimg
+
 
 def load_model_results(json_files):
     """Helper function to load model results from JSON files."""
@@ -411,7 +413,6 @@ def plot_generalization_gap(json_files, save_path=None):
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
 
-
 def plot_models_training_history(json_files, save_path=None):
     """
     Plot training and validation accuracy/loss curves for individual models.
@@ -666,18 +667,6 @@ def plot_transfer_learning_history(json_files, save_path=None):
         plt.plot(epochs, train_acc, 'b-', linewidth=2, label='Train')
         plt.plot(epochs, val_acc, 'r-', linewidth=2, label='Validation')
         
-        # If there's a fine-tuning phase (detected by sudden jumps), mark it
-        acc_diffs = np.diff(val_acc)
-        fine_tune_start = None
-        for i, diff in enumerate(acc_diffs):
-            if diff > 10:  # Significant jump indicating fine-tuning start
-                fine_tune_start = i + 2
-                break
-        
-        if fine_tune_start:
-            plt.axvline(x=fine_tune_start, color='green', linestyle=':', alpha=0.7, 
-                       label=f'Fine-tuning starts (epoch {fine_tune_start})')
-        
         plt.title(f'{model_version} - Accuracy')
         plt.ylabel('Accuracy (%)')
         plt.xlabel('Epoch')
@@ -689,10 +678,6 @@ def plot_transfer_learning_history(json_files, save_path=None):
         val_loss_clean = [loss if not np.isnan(loss) else None for loss in val_loss]
         plt.plot(epochs, train_loss, 'b-', linewidth=2, label='Train')
         plt.plot(epochs, val_loss_clean, 'r-', linewidth=2, label='Validation')
-        
-        if fine_tune_start:
-            plt.axvline(x=fine_tune_start, color='green', linestyle=':', alpha=0.7, 
-                       label=f'Fine-tuning starts (epoch {fine_tune_start})')
         
         plt.title(f'{model_version} - Loss')
         plt.ylabel('Loss')
@@ -706,32 +691,154 @@ def plot_transfer_learning_history(json_files, save_path=None):
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
 
-# Example usage
+def create_academic_loss_comparison(json_files, save_path, figsize=(15, 5)):
+    """
+        Create 6-plot figure: Top row = Loss, Bottom row = Accuracy for 3 models.
+        
+        Args:
+            json_files (list): List of 3 JSON files with training results
+            save_path (str): Path to save SVG file
+            figsize (tuple): Figure size
+        """
+    
+    # Load JSON files
+    results = []
+    for json_file in json_files:
+        with open(json_file, 'r') as f:
+            results.append(json.load(f))
+    
+    # Set academic style
+    plt.rcParams.update({
+        'font.size': 8,
+        'font.family': 'serif',
+        'axes.linewidth': 1.2,
+        'axes.spines.top': False,
+        'axes.spines.right': False,
+        'grid.alpha': 0.3,
+        'lines.linewidth': 2
+    })
+    
+    # Create 2x3 subplots
+    fig, axes = plt.subplots(2, 3, figsize=figsize)
+    
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']  # Blue, Orange, Green
+    
+    # Plot each model
+    for i, (result, color) in enumerate(zip(results, colors)):
+        model_version = result['model_version']
+        history = result['training_history']
+        params = result['params'] / 1e6
+        
+        epochs = list(range(1, len(history['loss']) + 1))
+        
+        # Clean data
+        train_loss = [x if not np.isnan(x) else None for x in history['loss']]
+        val_loss = [x if not np.isnan(x) else None for x in history['val_loss']]
+        train_acc = [x if not np.isnan(x) else None for x in history['accuracy']]
+        val_acc = [x if not np.isnan(x) else None for x in history['val_accuracy']]
+        
+        # TOP ROW: Loss plots
+        ax_loss = axes[0, i]
+        ax_loss.plot(epochs, train_loss, color=color, linestyle='-', label='Train', alpha=0.8)
+        ax_loss.plot(epochs, val_loss, color=color, linestyle='--', label='Validation', alpha=0.8)
+        ax_loss.set_title(f'{model_version} Loss\n({params:.1f}M params)', fontweight='bold')
+        ax_loss.set_xlabel('Epoch')
+        ax_loss.set_ylabel('Loss')
+        ax_loss.grid(True, alpha=0.3)
+        ax_loss.legend()
+        
+        # BOTTOM ROW: Accuracy plots
+        ax_acc = axes[1, i]
+        ax_acc.plot(epochs, train_acc, color=color, linestyle='-', label='Train', alpha=0.8)
+        ax_acc.plot(epochs, val_acc, color=color, linestyle='--', label='Validation', alpha=0.8)
+        ax_acc.set_title(f'{model_version} Accuracy', fontweight='bold')
+        ax_acc.set_xlabel('Epoch')
+        ax_acc.set_ylabel('Accuracy')
+        ax_acc.grid(True, alpha=0.3)
+        ax_acc.legend()
+        ax_acc.set_ylim(0, 1)
+    
+    plt.tight_layout()
+    
+    # Save as SVG
+    plt.savefig(save_path, format='png', dpi=300, bbox_inches='tight')        
+    return fig
+
+def compare_confusion_matrices(image1_path, image2_path, model1_name, model2_name, save_path):
+    """
+    Simple function to compare two confusion matrix images side by side.
+    
+    Args:
+        image1_path (str): Path to first confusion matrix image
+        image2_path (str): Path to second confusion matrix image  
+        model1_name (str): Name for first model
+        model2_name (str): Name for second model
+        save_path (str): Path to save SVG file
+    """
+    
+    # Set style
+    plt.rcParams.update({
+        'font.size': 14,
+        'font.family': 'serif',
+        'figure.dpi': 300
+    })
+    
+    # Create figure
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+    
+    # Load and display images
+    img1 = mpimg.imread(image1_path)
+    img2 = mpimg.imread(image2_path)
+    
+    ax1.imshow(img1)
+    ax1.set_title(f'(a) {model1_name}', fontweight='bold', pad=20)
+    ax1.axis('off')
+    
+    ax2.imshow(img2)
+    ax2.set_title(f'(b) {model2_name}', fontweight='bold', pad=20)
+    ax2.axis('off')
+    
+    # Main title
+    fig.suptitle('Confusion Matrix Comparison', fontsize=18, fontweight='bold')
+    
+    plt.tight_layout()
+    
+    # Save as SVG
+    plt.savefig(save_path, format='png', dpi=300, bbox_inches='tight')
+    print(f"Comparison saved as: {save_path}")
+    
+    return fig
+
 if __name__ == "__main__":
     # List of JSON files
     json_files = [
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0/model_results_B0.json",
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalizatized_images/model_results_B0.json",
-        "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B0_without_normalized_images_16_batches/model_results_B0.json"
-
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B1/model_results_B1.json", 
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B2/model_results_B2.json",
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B3/model_results_B3.json",
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/B4/model_results_B4.json",
-
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/Residual_B4/model_results_B4.json",
-        # "/home/veysel/dev-projects/StayAwake-AI/models_inattention/ImageNet_Pretrained_B4/model_results_B4.json",
+        "./StayAwake-AI/models_inattention/B0/model_results_B0.json",
+        "./StayAwake-AI/models_inattention/B1/model_results_B1.json", 
+        "./StayAwake-AI/models_inattention/B2/model_results_B2.json",
+        "./StayAwake-AI/models_inattention/B3/model_results_B3.json",
+        "./StayAwake-AI/models_inattention/B4/model_results_B4.json",
+        "./StayAwake-AI/models_inattention/ImageNet_Pretrained_B4/model_results_B4.json",
     ]
     
     # Generate all plots
-    save_path='/home/veysel/dev-projects/StayAwake-AI/diagrams/{}'
-    # plot_performance_vs_model_size(json_files, save_path=save_path.format('performance_vs_model_size.png'))
-    # plot_parameter_efficiency(json_files, save_path=save_path.format('parameter_efficiency.png'))
-    # plot_training_stability(json_files, save_path=save_path.format('training_stability.png'))
+    save_path='./StayAwake-AI/diagrams/{}'
+
+    plot_performance_vs_model_size(json_files, save_path=save_path.format('performance_vs_model_size.png'))
+    plot_parameter_efficiency(json_files, save_path=save_path.format('parameter_efficiency.png'))
+    plot_training_stability(json_files, save_path=save_path.format('training_stability.png'))
     plot_learning_curves(json_files, save_path=save_path.format('learning_curves.png'))
-    # plot_cost_benefit_analysis(json_files, save_path=save_path.format('cost_benefit_analysis.png'))
-    # plot_generalization_gap(json_files, save_path=save_path.format('generalization_gap.png'))
+    plot_cost_benefit_analysis(json_files, save_path=save_path.format('cost_benefit_analysis.png'))
+    plot_generalization_gap(json_files, save_path=save_path.format('generalization_gap.png'))
 
     plot_models_training_history(json_files, save_path=save_path.format('individual_training_history.png'))
-    # plot_combined_training_history(json_files, save_path=save_path.format('combined_training_history.png'))
-    # plot_transfer_learning_history(json_files, save_path=save_path.format('transfer_learning_history.png'))
+    plot_combined_training_history(json_files, save_path=save_path.format('combined_training_history.png'))
+    plot_transfer_learning_history(json_files, save_path=save_path.format('transfer_learning_history_B4_imagenet.png'))
+
+    compare_confusion_matrices(
+        image1_path='./StayAwake-AI/only_cm/cm_B4_final.png',
+        image2_path='./StayAwake-AI/only_cm/cm_B4_imagenet_final.png',
+       
+        model1_name='EfficientNet B4 (From Scratch)',
+        model2_name='EfficientNet B4 (ImageNet Pretrained)',
+        save_path=save_path.format('confusion_matrices_comparison.png')
+    )
